@@ -465,10 +465,10 @@ proc typeNameFromClass*(gClass: GTypeClass): cstring {.
 
 when not (G_DISABLE_CAST_CHECKS):
   template gTypeCic*(ip, gt, ct: expr): expr =
-    (cast[ptr ct](checkInstanceCast(cast[GTypeInstance](ip), gt)))
+    (cast[ptr ct](checkInstanceCast(cast[GTypeInstance](ip), cast[GType](gt))))
 
   template gTypeCcc*(cp, gt, ct: expr): expr =
-    (cast[ptr ct](checkClassCast(cast[GTypeClass](cp), gt)))
+    (cast[ptr ct](checkClassCast(cast[GTypeClass](cp), cast[GType](gt))))
 
 else:
   template gTypeCic*(ip, gt, ct: expr): expr =
@@ -542,50 +542,6 @@ template gTypeFromInterface*(gIface: expr): expr =
 
 template gTypeInstanceGetPrivate*(instance, gType, cType: expr): expr =
   (cast[ptr CType](gTypeInstanceGetPrivate(cast[GTypeInstance](instance), gType)))
-
-template gTypeClassGetPrivate*(klass, gType, cType: expr): expr =
-  (cast[ptr CType](gTypeClassGetPrivate(cast[GTypeClass](klass), gType)))
-template gTypeCheckInstance*(instance: expr): expr =
-  (gTypeChi(cast[GTypeInstance](instance)))
-
-template gTypeCheckInstanceCast*(instance, gType, cType: expr): expr =
-  (gTypeCic(instance, gType, cType))
-
-template gTypeCheckInstanceType*(instance, gType: expr): expr =
-  (gTypeCit(instance, gType))
-
-template gTypeCheckInstanceFundamentalType*(instance, gType: expr): expr =
-  (gTypeCift(instance, gType))
-
-template gTypeInstanceGetClass*(instance, gType, cType: expr): expr =
-  (gTypeIgc(instance, gType, cType))
-
-template gTypeInstanceGetInterface*(instance, gType, cType: expr): expr =
-  (gTypeIgi(instance, gType, cType))
-
-template gTypeCheckClassCast*(gClass, gType, cType: expr): expr =
-  (gTypeCcc(gClass, gType, cType))
-
-template gTypeCheckClassType*(gClass, gType: expr): expr =
-  (gTypeCct(gClass, gType))
-
-template gTypeCheckValue*(value: expr): expr =
-  (gTypeChv(value))
-
-template gTypeCheckValueType*(value, gType: expr): expr =
-  (gTypeCvh(value, gType))
-
-template gTypeFromInstance*(instance: expr): expr =
-  (gTypeFromClass((cast[GTypeInstance](instance)).gClass))
-
-template gTypeFromClass*(gClass: expr): expr =
-  ((cast[GTypeClass](gClass)).gType)
-
-template gTypeFromInterface*(gIface: expr): expr =
-  ((cast[GTypeInterface](gIface)).gType)
-
-template gTypeInstanceGetPrivate*(instance, gType, cType: expr): expr =
-  (cast[ptr CType](gTypeInstanceGetPrivate(cast[GTypeInstance](instance), (gType))))
 
 template gTypeClassGetPrivate*(klass, gType, cType: expr): expr =
   (cast[ptr CType](gTypeClassGetPrivate(cast[GTypeClass](klass), gType)))
@@ -897,8 +853,8 @@ template gClosureNNotifiers*(cl: expr): expr =
 template gCclosureSwapData*(cclosure: expr): expr =
   ((cast[GClosure](cclosure)).derivativeFlag)
 
-template gCallback*(f: expr): expr =
-  (gCallback(f))
+#template g_Callback*(f: expr): expr =
+#  (gCallback(f))
 
 type
   GCClosure* =  ptr GCClosureObj
@@ -1579,7 +1535,7 @@ proc objectInterfaceFindProperty*(gIface: Gpointer; propertyName: cstring): GPar
 proc objectInterfaceListProperties*(gIface: Gpointer; nPropertiesP: var cuint): ptr GParamSpec {.
     importc: "g_object_interface_list_properties", libgobj.}
 proc objectGetType*(): GType {.importc: "g_object_get_type", libgobj.}
-proc newObject*(objectType: GType; firstPropertyName: cstring): Gpointer {.varargs,
+proc newObject*(objectType: GType; firstPropertyName: cstring): GObject {.varargs,
     importc: "g_object_new", libgobj.}
 proc objectNewv*(objectType: GType; nParameters: cuint; parameters: GParameter): Gpointer {.
     importc: "g_object_newv", libgobj.}
@@ -2523,56 +2479,97 @@ proc `stringTakeOwnership=`*(value: GValue; vString: cstring) {.
 type
   Gchararray* = cstring
 
-# type_iface: The GType of the interface to add
-# iface_init: The interface init function
-proc g_implement_interface_str*(type_iface, iface_init: string): string =
+# manual extensions for gobject.nim
+#
+
+template gCallback*(f: expr): expr =
+  cast[GCallback](f)
+
+# typeIface: The GType of the interface to add
+# ifaceInit: The interface init function
+proc implementInterfaceStr*(typeIface, ifaceInit: string): string {.cdecl.} =
   """
-var g_implement_interface_info = GInterfaceInfoObj(interface_init: cast[GInterfaceInitFunc]($2),
-                                                     interface_finalize: nil,
-                                                     interface_data: nil)
-add_interface_static(g_define_type_id, $1, addr(g_implement_interface_info))
+var gImplementInterfaceInfo = GInterfaceInfoObj(interfaceInit: cast[GInterfaceInitFunc](\$2),
+                                                     interfaceFinalize: nil,
+                                                     interfaceData: nil)
+addInterfaceStatic(gDefineTypeId, \$1, addr(gImplementInterfaceInfo))
 
-""" % [type_iface, iface_init]
+""" % [typeIface, ifaceInit]
 
+# Below is the original C description -- but we use nep1 style 
 # tn: The name of the new type, in Camel case.
 # t: The name of the new type, in lowercase, with words separated by _.
 # tp: The GType of the parent type.
-# f: GTypeFlags to pass to g_type_register_static()
-# c: Custom code that gets inserted in the *_get_type() function.
-macro g_define_type_extended*(tn, t, tp, f, c: static[string]): stmt =
-  var cc = "\n" & c
-  cc = cc.splitLines.join("\n    ")
+# f: GTypeFlags to pass to gTypeRegisterStatic()
+# c: Custom code that gets inserted in the *GetType() function.
+macro gDefineTypeExtended*(tn, t, tp, f, c: static[string]): stmt =
+  var
+    cc = indent("\n" & c, 4)
+    s = """
 
-  var s = """
+proc $2Init(self: $1) {.cdecl.}
+proc $2ClassInit(klass: $1Class) {.cdecl.}
+var $2ParentClass: Gpointer = nil
+var $1PrivateOffset: cint
+proc $2ClassInternInit(klass: Gpointer) {.cdecl.} =
+  $2ParentClass = typeClassPeekParent(klass)
+  if $1PrivateOffset != 0:
+    typeClassAdjustPrivateOffset(klass, $1PrivateOffset)
 
-proc $2_init(self: $1)
-proc $2_class_init(klass: $1Class)
-var $2_parent_class: gpointer = nil
-proc $2_class_intern_init(klass: gpointer) =
-  $2_parent_class = g_type_class_peek_parent(klass)
-  $2_class_init(cast[$1Class](klass))
+  $2ClassInit(cast[$1Class](klass))
+  
+proc $2GetInstancePrivate(self: $1): $1Private {.cdecl.} =
+  return cast[$1Private](gStructMemberP(self, $1PrivateOffset))
 
-proc $2_get_type(): GType =
-  var g_define_type_id_volatile {.global.}: Gsize = 0
-  if g_once_init_enter(addr(g_define_type_id_volatile)):
-    var g_define_type_id: GType = register_static_simple($3,
-                                      g_intern_static_string("$1"),
+proc $2GetType*(): GType {.cdecl.} =
+  var gDefineTypeIdVolatile {.global.}: Gsize = 0
+  if onceInitEnter(addr(gDefineTypeIdVolatile)):
+    var gDefineTypeId: GType = registerStaticSimple($3,
+                                      internStaticString("$1"),
                                       sizeof($1ClassObj).cuint,
-                                      cast[GClassInitFunc]($2_class_intern_init),
+                                      cast[GClassInitFunc]($2ClassInternInit),
                                       sizeof($1Obj).cuint,
-                                      cast[GInstanceInitFunc]($2_init),
+                                      cast[GInstanceInitFunc]($2Init),
                                       cast[GTypeFlags]($4))
     $5
-    g_once_init_leave(addr(g_define_type_id_volatile), g_define_type_id)
-  return g_define_type_id_volatile
+    onceInitLeave(addr(gDefineTypeIdVolatile), gDefineTypeId)
+  return gDefineTypeIdVolatile
 
 """ % [tn, t, tp, f, cc]
+  #echo s
   result = parseStmt(s)
 
-# manual extensions for gobject.nim
-#
-#template gSignalConnect*(instance, detailedSignal, cHandler, data: expr): expr =
-#  gSignalConnectData(instance, detailedSignal, cHandler, data,
-#                        nil, cast[GConnectFlags](0))
-#
+template gDefineTypeExtended*(tn, tp, f: expr; c: string) =
+  const tnn = astToStr(tn)
+  const t = toLower(tnn[0]) & substr(tnn, 1)
+  gDefineTypeExtended(tnn, t, astToStr(tp), astToStr(f), c)
+
+template offsetof*(typ, field): expr = (var dummy: typ; cast[system.int](addr(dummy.field)) - cast[system.int](addr(dummy)))
+
+template gStructOffset*(typ, field): expr = (var dummy: typ; clong(cast[system.int](addr(dummy.field)) - cast[system.int](addr(dummy))))
+
+template gPrivateOffset*(TypeName, field): expr =
+  `TypeName privateOffset` + gStructOffset(`TypeName PrivateObj`, field)
+
+template gStructMemberP*(structP, structOffset): expr =
+  (cast[Gpointer]((cast[system.int](structP) + (clong) (structOffset))))
+
+template gDefineTypeExtendedClassInit*(TypeName, typeName): string =
+  """
+  proc $2ClassInternInit(klass: Gpointer) {.cdecl.} =
+    $2ParentClass = gTypeClassPeekParent (klass)
+    if $1PrivateOffset != 0:
+      gTypeClassAdjustPrivateIffset(klass, addr $1PrivateOffset)
+    $2ClassInit(cast[ptr $1Class](klass))
+
+""" % [TypeName, typeName]
+
+template gAddPrivate*(TypeName): expr =
+  `TypeName privateOffset` = addInstancePrivate(gDefineTypeId, sizeof(`TypeName PrivateObj`))
+
+template gDefineType*(TN, TP): expr =
+  gDefineTypeExtended (TN, TP, 0, "")
+
+template gDefineTypeWithPrivate*(TN, TP): expr =
+  gDefineTypeExtended(TN, TP, 0, "gAddPrivate(" & astToStr(TN) & ")")
 

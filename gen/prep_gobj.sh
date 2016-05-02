@@ -1,5 +1,5 @@
 #!/bin/bash
-# S. Salewski, 20-APR-2016
+# S. Salewski, 02-MAI-2016
 # generate gobject bindings for Nim
 #
 glib_dir="/home/stefan/Downloads/glib-2.48.0"
@@ -1258,73 +1258,6 @@ const
 '
 perl -0777 -p -i -e "s~\Q$i\E~$j~s" final.nim
 
-i='
-template g_Type_Check_Instance*(instance: expr): expr =
-  (g_Type_Chi(cast[ptr GTypeInstance]((instance))))
-
-
-template g_Type_Check_Instance_Cast*(instance, gType, cType: expr): expr =
-  (g_Type_Cic((instance), (gType), cType))
-
-
-template g_Type_Check_Instance_Type*(instance, gType: expr): expr =
-  (g_Type_Cit((instance), (gType)))
-
-
-template g_Type_Check_Instance_Fundamental_Type*(instance, gType: expr): expr =
-  (g_Type_Cift((instance), (gType)))
-
-
-template g_Type_Instance_Get_Class*(instance, gType, cType: expr): expr =
-  (g_Type_Igc((instance), (gType), cType))
-
-
-template g_Type_Instance_Get_Interface*(instance, gType, cType: expr): expr =
-  (g_Type_Igi((instance), (gType), cType))
-
-
-template g_Type_Check_Class_Cast*(gClass, gType, cType: expr): expr =
-  (g_Type_Ccc((gClass), (gType), cType))
-
-
-template g_Type_Check_Class_Type*(gClass, gType: expr): expr =
-  (g_Type_Cct((gClass), (gType)))
-
-
-template g_Type_Check_Value*(value: expr): expr =
-  (g_Type_Chv((value)))
-
-
-template g_Type_Check_Value_Type*(value, gType: expr): expr =
-  (g_Type_Cvh((value), (gType)))
-
-
-template g_Type_From_Instance*(instance: expr): expr =
-  (g_Type_From_Class((cast[ptr GTypeInstance]((instance))).gClass))
-
-
-template g_Type_From_Class*(gClass: expr): expr =
-  ((cast[ptr GTypeClass]((gClass))).gType)
-
-
-template g_Type_From_Interface*(gIface: expr): expr =
-  ((cast[ptr GTypeInterface]((gIface))).gType)
-
-
-template g_Type_Instance_Get_Private*(instance, gType, cType: expr): expr =
-  (cast[ptr CType](gTypeInstanceGetPrivate(cast[ptr GTypeInstance]((instance)),
-      (gType))))
-
-
-template g_Type_Class_Get_Private*(klass, gType, cType: expr): expr =
-  (cast[ptr CType](gTypeClassGetPrivate(cast[ptr GTypeClass]((klass)), (gType))))
-'
-perl -0777 -p -i -e "s~\Q$i\E~~s" final.nim
-j='const
-  G_TYPE_FLAG_RESERVED_ID_BIT* = ((GType)(1 shl 0))
-'
-perl -0777 -p -i -e "s~\Q$j\E~$i$j~s" final.nim
-
 sed -i 's/gCclosureMarshalBOOL_BOXED_BOXED\* = gCclosureMarshalBOOLEAN_BOXED_BOXED/gCclosureMarshalBOOL_BOXED_BOXED* = cclosureMarshalBOOLEAN_BOXED_BOXED/g' final.nim
 
 #perl -0777 -p -i -e "s/(\n\s*)(proc )(\w+)(\*\([^}]*VaList[^}]*})/\n#[$&\n]#/sg" final.nim
@@ -1739,8 +1672,8 @@ template g_Closure_N_Notifiers*(cl: expr): expr =
 template g_Cclosure_Swap_Data*(cclosure: expr): expr =
   ((cast[GClosure](cclosure)).derivativeFlag)
 
-template g_Callback*(f: expr): expr =
-  (gCallback(f))
+#template g_Callback*(f: expr): expr =
+#  (gCallback(f))
 '
 perl -0777 -p -i -e "s/\Q$i\E/$j/s" final.nim
 
@@ -1819,75 +1752,8 @@ perl -0777 -p -i -e "s/\Q$i\E/$j/s" final.nim
 
 sed -i 's/when GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_42:/when true: #&/g' final.nim
 
-i='template g_callback*(f: expr): expr = 
-  (GCallback(f))
-
-type 
-  GCallback* = proc () {.cdecl.}
-'
-j='type 
-  GCallback* = proc () {.cdecl.}
-
-proc g_callback*(p: proc): GCallback = 
-  cast[GCallback](p)
-'
-#perl -0777 -p -i -e "s/\Q$i\E/$j/s" final.nim
-
 sed -i '/^#type$/d' final.nim
 sed -i 's/\(0x\)0*\([0123456789ABCDEF]\)/\1\2/g' final.nim
-
-# macros for generation of new GObject types
-# there is still much work to do -- maybe put all the macros in its own file...
-cat <<EOF >> final.nim
-
-
-# type_iface: The GType of the interface to add
-# iface_init: The interface init function
-proc g_implement_interface_str*(type_iface, iface_init: string): string =
-  """
-var g_implement_interface_info = GInterfaceInfoObj(interface_init: cast[GInterfaceInitFunc](\$2),
-                                                     interface_finalize: nil,
-                                                     interface_data: nil)
-add_interface_static(g_define_type_id, \$1, addr(g_implement_interface_info))
-
-""" % [type_iface, iface_init]
-
-# tn: The name of the new type, in Camel case.
-# t: The name of the new type, in lowercase, with words separated by _.
-# tp: The GType of the parent type.
-# f: GTypeFlags to pass to g_type_register_static()
-# c: Custom code that gets inserted in the *_get_type() function.
-macro g_define_type_extended*(tn, t, tp, f, c: static[string]): stmt =
-  var cc = "\\n" & c
-  cc = cc.splitLines.join("\\n    ")
-
-  var s = """
-
-proc \$2_init(self: \$1)
-proc \$2_class_init(klass: \$1Class)
-var \$2_parent_class: gpointer = nil
-proc \$2_class_intern_init(klass: gpointer) =
-  \$2_parent_class = g_type_class_peek_parent(klass)
-  \$2_class_init(cast[\$1Class](klass))
-
-proc \$2_get_type(): GType =
-  var g_define_type_id_volatile {.global.}: Gsize = 0
-  if g_once_init_enter(addr(g_define_type_id_volatile)):
-    var g_define_type_id: GType = register_static_simple(\$3,
-                                      g_intern_static_string("\$1"),
-                                      sizeof(\$1ClassObj).Guint,
-                                      cast[GClassInitFunc](\$2_class_intern_init),
-                                      sizeof(\$1Obj).Guint,
-                                      cast[GInstanceInitFunc](\$2_init),
-                                      cast[GTypeFlags](\$4))
-    \$5
-    g_once_init_leave(addr(g_define_type_id_volatile), g_define_type_id)
-  return g_define_type_id_volatile
-
-""" % [tn, t, tp, f, cc]
-  result = parseStmt(s)
-
-EOF
 
 sed -i   's/\* = g\([A-Z]\)/* = \L\1/g' final.nim
 
@@ -1923,71 +1789,6 @@ perl -0777 -p -i -e "s/(\n\s*)(proc get)([A-Z]\w+)(\*\([^}]*\): \w[^}]*})/\$&\1p
 
 sed -i 's/^proc object\*(/proc `object`\*(/g' final.nim
 sed -i 's/^proc enum\*(/proc `enum`\*(/g' final.nim
-
-i='template gTypeCheckInstance*(instance: expr): expr =
-  (gTypeChi(cast[GTypeInstance](instance)))
-
-
-template gTypeCheckInstanceCast*(instance, gType, cType: expr): expr =
-  (gTypeCic(instance, gType, cType))
-
-
-template gTypeCheckInstanceType*(instance, gType: expr): expr =
-  (gTypeCit(instance, gType))
-
-
-template gTypeCheckInstanceFundamentalType*(instance, gType: expr): expr =
-  (gTypeCift(instance, gType))
-
-
-template gTypeInstanceGetClass*(instance, gType, cType: expr): expr =
-  (gTypeIgc(instance, gType, cType))
-
-
-template gTypeInstanceGetInterface*(instance, gType, cType: expr): expr =
-  (gTypeIgi(instance, gType, cType))
-
-
-template gTypeCheckClassCast*(gClass, gType, cType: expr): expr =
-  (gTypeCcc(gClass, gType, cType))
-
-
-template gTypeCheckClassType*(gClass, gType: expr): expr =
-  (gTypeCct(gClass, gType))
-
-
-template gTypeCheckValue*(value: expr): expr =
-  (gTypeChv(value))
-
-
-template gTypeCheckValueType*(value, gType: expr): expr =
-  (gTypeCvh(value, gType))
-
-
-template gTypeFromInstance*(instance: expr): expr =
-  (gTypeFromClass((cast[GTypeInstance](instance)).gClass))
-
-
-template gTypeFromClass*(gClass: expr): expr =
-  ((cast[GTypeClass](gClass)).gType)
-
-
-template gTypeFromInterface*(gIface: expr): expr =
-  ((cast[GTypeInterface](gIface)).gType)
-
-
-template gTypeInstanceGetPrivate*(instance, gType, cType: expr): expr =
-  (cast[ptr CType](gTypeInstanceGetPrivate(cast[GTypeInstance](instance), (gType))))
-
-
-template gTypeClassGetPrivate*(klass, gType, cType: expr): expr =
-  (cast[ptr CType](gTypeClassGetPrivate(cast[GTypeClass](klass), gType)))
-'
-perl -0777 -p -i -e "s/\Q$i\E//s" final.nim
-j='const
-  G_TYPE_FLAG_RESERVED_ID_BIT* = (GType(1 shl 0))
-'
-perl -0777 -p -i -e "s/\Q$j\E/$i$j/s" final.nim
 
 i='when not (G_DISABLE_CAST_CHECKS):
   template gTypeCic*(ip, gt, ct: expr): expr =
@@ -2029,10 +1830,10 @@ template gTypeCvh*(vl, gt: expr): expr =
 '
 j='when not (G_DISABLE_CAST_CHECKS):
   template gTypeCic*(ip, gt, ct: expr): expr =
-    (cast[ptr ct](checkInstanceCast(cast[GTypeInstance](ip), gt)))
+    (cast[ptr ct](checkInstanceCast(cast[GTypeInstance](ip), cast[GType](gt))))
 
   template gTypeCcc*(cp, gt, ct: expr): expr =
-    (cast[ptr ct](checkClassCast(cast[GTypeClass](cp), gt)))
+    (cast[ptr ct](checkClassCast(cast[GTypeClass](cp), cast[GType](gt))))
 
 else:
   template gTypeCic*(ip, gt, ct: expr): expr =
@@ -2146,6 +1947,79 @@ j='template gTypeInstanceGetPrivate*(instance, gType, cType: expr): expr =
 
 template gTypeClassGetPrivate*(klass, gType, cType: expr): expr =
   (cast[ptr CType](getPrivate(cast[GTypeClass](klass), gType)))
+'
+perl -0777 -p -i -e "s/\Q$i\E/$j/s" final.nim
+
+i='template gTypeCheckInstance*(instance: expr): expr =
+  (gTypeChi(cast[GTypeInstance](instance)))
+
+
+template gTypeCheckInstanceCast*(instance, gType, cType: expr): expr =
+  (gTypeCic(instance, gType, cType))
+
+
+template gTypeCheckInstanceType*(instance, gType: expr): expr =
+  (gTypeCit(instance, gType))
+
+
+template gTypeCheckInstanceFundamentalType*(instance, gType: expr): expr =
+  (gTypeCift(instance, gType))
+
+
+template gTypeInstanceGetClass*(instance, gType, cType: expr): expr =
+  (gTypeIgc(instance, gType, cType))
+
+
+template gTypeInstanceGetInterface*(instance, gType, cType: expr): expr =
+  (gTypeIgi(instance, gType, cType))
+
+
+template gTypeCheckClassCast*(gClass, gType, cType: expr): expr =
+  (gTypeCcc(gClass, gType, cType))
+
+
+template gTypeCheckClassType*(gClass, gType: expr): expr =
+  (gTypeCct(gClass, gType))
+
+
+template gTypeCheckValue*(value: expr): expr =
+  (gTypeChv(value))
+
+
+template gTypeCheckValueType*(value, gType: expr): expr =
+  (gTypeCvh(value, gType))
+
+
+template gTypeFromInstance*(instance: expr): expr =
+  (gTypeFromClass((cast[GTypeInstance](instance)).gClass))
+
+
+template gTypeFromClass*(gClass: expr): expr =
+  ((cast[GTypeClass](gClass)).gType)
+
+
+template gTypeFromInterface*(gIface: expr): expr =
+  ((cast[GTypeInterface](gIface)).gType)
+
+
+template gTypeInstanceGetPrivate*(instance, gType, cType: expr): expr =
+  (cast[ptr CType](gTypeInstanceGetPrivate(cast[GTypeInstance](instance), gType)))
+
+
+template gTypeClassGetPrivate*(klass, gType, cType: expr): expr =
+  (cast[ptr CType](gTypeClassGetPrivate(cast[GTypeClass](klass), gType)))
+'
+perl -0777 -p -i -e "s/\Q$i\E//s" final.nim
+j='const
+  G_TYPE_FLAG_RESERVED_ID_BIT* = (GType(1 shl 0))
+'
+perl -0777 -p -i -e "s/\Q$j\E/$i$j/s" final.nim
+
+i='proc newObject*(objectType: GType; firstPropertyName: cstring): Gpointer {.varargs,
+    importc: "g_object_new", libgobj.}
+'
+j='proc newObject*(objectType: GType; firstPropertyName: cstring): GObject {.varargs,
+    importc: "g_object_new", libgobj.}
 '
 perl -0777 -p -i -e "s/\Q$i\E/$j/s" final.nim
 
