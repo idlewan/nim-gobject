@@ -493,7 +493,7 @@ template gTypeCift*(ip, ft: expr): expr =
   (checkInstanceIsFundamentallyA(cast[GTypeInstance](ip), ft))
 
 template gTypeCit*(ip, gt: expr): expr =
-  (checkInstanceIsA(cast[GTypeInstance](ip), gt))
+  (checkInstanceIsA(cast[GTypeInstance](ip), cast[GType](gt)))
 
 template gTypeCct*(cp, gt: expr): expr =
   (checkClassIsA(cast[GTypeClass](cp), gt))
@@ -566,7 +566,7 @@ template gValueHolds*(value, `type`: expr): expr =
 type
   GValueTransform* = proc (srcValue: GValue; destValue: GValue) {.cdecl.}
 
-proc init*(value: GValue; gType: GType): GValue {.importc: "g_value_init",
+proc init*(value: var GValueObj; gType: GType): GValue {.importc: "g_value_init",
     libgobj.}
 proc copy*(srcValue: GValue; destValue: GValue) {.
     importc: "g_value_copy", libgobj.}
@@ -1847,15 +1847,15 @@ proc flagsGetValueByName*(flagsClass: GFlagsClass; name: cstring): GFlagsValue {
     importc: "g_flags_get_value_by_name", libgobj.}
 proc flagsGetValueByNick*(flagsClass: GFlagsClass; nick: cstring): GFlagsValue {.
     importc: "g_flags_get_value_by_nick", libgobj.}
-proc setEnum*(value: GValue; vEnum: cint) {.importc: "g_value_set_enum",
+proc setEnum*(value: var GValueObj; vEnum: cint) {.importc: "g_value_set_enum",
     libgobj.}
-proc `enum=`*(value: GValue; vEnum: cint) {.importc: "g_value_set_enum",
+proc `enum=`*(value: var GValueObj; vEnum: cint) {.importc: "g_value_set_enum",
     libgobj.}
 proc getEnum*(value: GValue): cint {.importc: "g_value_get_enum", libgobj.}
 proc `enum`*(value: GValue): cint {.importc: "g_value_get_enum", libgobj.}
-proc setFlags*(value: GValue; vFlags: cuint) {.importc: "g_value_set_flags",
+proc setFlags*(value: var GValueObj; vFlags: cuint) {.importc: "g_value_set_flags",
     libgobj.}
-proc `flags=`*(value: GValue; vFlags: cuint) {.importc: "g_value_set_flags",
+proc `flags=`*(value: var GValueObj; vFlags: cuint) {.importc: "g_value_set_flags",
     libgobj.}
 proc getFlags*(value: GValue): cuint {.importc: "g_value_get_flags",
     libgobj.}
@@ -2327,102 +2327,102 @@ template gValueHoldsGtype*(value: expr): expr =
 template gValueHoldsVariant*(value: expr): expr =
   (gTypeCheckValueType(value, G_TYPE_VARIANT))
 
-proc setChar*(value: GValue; vChar: char) {.importc: "g_value_set_char",
+proc setChar*(value: var GValueObj; vChar: char) {.importc: "g_value_set_char",
     libgobj.}
 
-proc `char=`*(value: GValue; vChar: char) {.importc: "g_value_set_char",
+proc `char=`*(value: var GValueObj; vChar: char) {.importc: "g_value_set_char",
     libgobj.}
 proc getChar*(value: GValue): char {.importc: "g_value_get_char", libgobj.}
 proc char*(value: GValue): char {.importc: "g_value_get_char", libgobj.}
-proc setSchar*(value: GValue; vChar: int8) {.importc: "g_value_set_schar",
+proc setSchar*(value: var GValueObj; vChar: int8) {.importc: "g_value_set_schar",
     libgobj.}
-proc `schar=`*(value: GValue; vChar: int8) {.importc: "g_value_set_schar",
+proc `schar=`*(value: var GValueObj; vChar: int8) {.importc: "g_value_set_schar",
     libgobj.}
 proc getSchar*(value: GValue): int8 {.importc: "g_value_get_schar",
     libgobj.}
 proc schar*(value: GValue): int8 {.importc: "g_value_get_schar",
     libgobj.}
-proc setUchar*(value: GValue; vUchar: cuchar) {.
+proc setUchar*(value: var GValueObj; vUchar: cuchar) {.
     importc: "g_value_set_uchar", libgobj.}
-proc `uchar=`*(value: GValue; vUchar: cuchar) {.
+proc `uchar=`*(value: var GValueObj; vUchar: cuchar) {.
     importc: "g_value_set_uchar", libgobj.}
 proc getUchar*(value: GValue): cuchar {.importc: "g_value_get_uchar",
     libgobj.}
 proc uchar*(value: GValue): cuchar {.importc: "g_value_get_uchar",
     libgobj.}
-proc setBoolean*(value: GValue; vBoolean: Gboolean) {.
+proc setBoolean*(value: var GValueObj; vBoolean: Gboolean) {.
     importc: "g_value_set_boolean", libgobj.}
-proc `boolean=`*(value: GValue; vBoolean: Gboolean) {.
+proc `boolean=`*(value: var GValueObj; vBoolean: Gboolean) {.
     importc: "g_value_set_boolean", libgobj.}
 proc getBoolean*(value: GValue): Gboolean {.importc: "g_value_get_boolean",
     libgobj.}
 proc boolean*(value: GValue): Gboolean {.importc: "g_value_get_boolean",
     libgobj.}
-proc setInt*(value: GValue; vInt: cint) {.importc: "g_value_set_int",
+proc setInt*(value: var GValueObj; vInt: cint) {.importc: "g_value_set_int",
     libgobj.}
-proc `int=`*(value: GValue; vInt: cint) {.importc: "g_value_set_int",
+proc `int=`*(value: var GValueObj; vInt: cint) {.importc: "g_value_set_int",
     libgobj.}
 proc getInt*(value: GValue): cint {.importc: "g_value_get_int", libgobj.}
 proc int*(value: GValue): cint {.importc: "g_value_get_int", libgobj.}
-proc setUint*(value: GValue; vUint: cuint) {.importc: "g_value_set_uint",
+proc setUint*(value: var GValueObj; vUint: cuint) {.importc: "g_value_set_uint",
     libgobj.}
-proc `uint=`*(value: GValue; vUint: cuint) {.importc: "g_value_set_uint",
+proc `uint=`*(value: var GValueObj; vUint: cuint) {.importc: "g_value_set_uint",
     libgobj.}
 proc getUint*(value: GValue): cuint {.importc: "g_value_get_uint",
     libgobj.}
 proc uint*(value: GValue): cuint {.importc: "g_value_get_uint",
     libgobj.}
-proc setLong*(value: GValue; vLong: clong) {.importc: "g_value_set_long",
+proc setLong*(value: var GValueObj; vLong: clong) {.importc: "g_value_set_long",
     libgobj.}
-proc `long=`*(value: GValue; vLong: clong) {.importc: "g_value_set_long",
+proc `long=`*(value: var GValueObj; vLong: clong) {.importc: "g_value_set_long",
     libgobj.}
 proc getLong*(value: GValue): clong {.importc: "g_value_get_long",
     libgobj.}
 proc long*(value: GValue): clong {.importc: "g_value_get_long",
     libgobj.}
-proc setUlong*(value: GValue; vUlong: culong) {.
+proc setUlong*(value: var GValueObj; vUlong: culong) {.
     importc: "g_value_set_ulong", libgobj.}
-proc `ulong=`*(value: GValue; vUlong: culong) {.
+proc `ulong=`*(value: var GValueObj; vUlong: culong) {.
     importc: "g_value_set_ulong", libgobj.}
 proc getUlong*(value: GValue): culong {.importc: "g_value_get_ulong",
     libgobj.}
 proc ulong*(value: GValue): culong {.importc: "g_value_get_ulong",
     libgobj.}
-proc setInt64*(value: GValue; vInt64: int64) {.
+proc setInt64*(value: var GValueObj; vInt64: int64) {.
     importc: "g_value_set_int64", libgobj.}
-proc `int64=`*(value: GValue; vInt64: int64) {.
+proc `int64=`*(value: var GValueObj; vInt64: int64) {.
     importc: "g_value_set_int64", libgobj.}
 proc getInt64*(value: GValue): int64 {.importc: "g_value_get_int64",
     libgobj.}
 proc int64*(value: GValue): int64 {.importc: "g_value_get_int64",
     libgobj.}
-proc setUint64*(value: GValue; vUint64: uint64) {.
+proc setUint64*(value: var GValueObj; vUint64: uint64) {.
     importc: "g_value_set_uint64", libgobj.}
-proc `uint64=`*(value: GValue; vUint64: uint64) {.
+proc `uint64=`*(value: var GValueObj; vUint64: uint64) {.
     importc: "g_value_set_uint64", libgobj.}
 proc getUint64*(value: GValue): uint64 {.importc: "g_value_get_uint64",
     libgobj.}
 proc uint64*(value: GValue): uint64 {.importc: "g_value_get_uint64",
     libgobj.}
-proc setFloat*(value: GValue; vFloat: cfloat) {.
+proc setFloat*(value: var GValueObj; vFloat: cfloat) {.
     importc: "g_value_set_float", libgobj.}
-proc `float=`*(value: GValue; vFloat: cfloat) {.
+proc `float=`*(value: var GValueObj; vFloat: cfloat) {.
     importc: "g_value_set_float", libgobj.}
 proc getFloat*(value: GValue): cfloat {.importc: "g_value_get_float",
     libgobj.}
 proc float*(value: GValue): cfloat {.importc: "g_value_get_float",
     libgobj.}
-proc setDouble*(value: GValue; vDouble: cdouble) {.
+proc setDouble*(value: var GValueObj; vDouble: cdouble) {.
     importc: "g_value_set_double", libgobj.}
-proc `double=`*(value: GValue; vDouble: cdouble) {.
+proc `double=`*(value: var GValueObj; vDouble: cdouble) {.
     importc: "g_value_set_double", libgobj.}
 proc getDouble*(value: GValue): cdouble {.importc: "g_value_get_double",
     libgobj.}
 proc double*(value: GValue): cdouble {.importc: "g_value_get_double",
     libgobj.}
-proc setString*(value: GValue; vString: cstring) {.
+proc setString*(value: var GValueObj; vString: cstring) {.
     importc: "g_value_set_string", libgobj.}
-proc `string=`*(value: GValue; vString: cstring) {.
+proc `string=`*(value: var GValueObj; vString: cstring) {.
     importc: "g_value_set_string", libgobj.}
 proc setStaticString*(value: GValue; vString: cstring) {.
     importc: "g_value_set_static_string", libgobj.}
@@ -2539,17 +2539,48 @@ proc $2GetType*(): GType {.cdecl.} =
   #echo s
   result = parseStmt(s)
 
+macro gDefineTypeExtendedNoPriv*(tn, t, tp, f: static[string]): stmt =
+  var
+    s = """
+
+proc $2Init(self: $1) {.cdecl.}
+proc $2ClassInit(klass: $1Class) {.cdecl.}
+var $2ParentClass: Gpointer = nil
+proc $2ClassInternInit(klass: Gpointer) {.cdecl.} =
+  $2ParentClass = typeClassPeekParent(klass)
+
+  $2ClassInit(cast[$1Class](klass))
+  
+proc $2GetType*(): GType {.cdecl.} =
+  var gDefineTypeIdVolatile {.global.}: Gsize = 0
+  if onceInitEnter(addr(gDefineTypeIdVolatile)):
+    var gDefineTypeId: GType = registerStaticSimple($3,
+                                      internStaticString("$1"),
+                                      sizeof($1ClassObj).cuint,
+                                      cast[GClassInitFunc]($2ClassInternInit),
+                                      sizeof($1Obj).cuint,
+                                      cast[GInstanceInitFunc]($2Init),
+                                      cast[GTypeFlags]($4))
+    onceInitLeave(addr(gDefineTypeIdVolatile), gDefineTypeId)
+  return gDefineTypeIdVolatile
+
+""" % [tn, t, tp, f]
+  #echo s
+  result = parseStmt(s)
+
 template gDefineTypeExtended*(tn, tp, f: expr; c: string) =
   const tnn = astToStr(tn)
   const t = toLower(tnn[0]) & substr(tnn, 1)
-  gDefineTypeExtended(tnn, t, astToStr(tp), astToStr(f), c)
+  when c == "":
+    gDefineTypeExtendedNoPriv(tnn, t, astToStr(tp), astToStr(f))
+  else:
+    gDefineTypeExtended(tnn, t, astToStr(tp), astToStr(f), c)
 
 template offsetof*(typ, field): expr = (var dummy: typ; cast[system.int](addr(dummy.field)) - cast[system.int](addr(dummy)))
 
-template gStructOffset*(typ, field): expr = (var dummy: typ; clong(cast[system.int](addr(dummy.field)) - cast[system.int](addr(dummy))))
+template gStructOffset*(typ, field): expr = (var dummy: `typ Obj`; clong(cast[system.int](addr(dummy.field)) - cast[system.int](addr(dummy))))
 
-template gPrivateOffset*(TypeName, field): expr =
-  `TypeName privateOffset` + gStructOffset(`TypeName PrivateObj`, field)
+template gPrivateOffset*(typ, field): expr = (var dummy: `typ PrivateObj`; clong(`typ privateOffset` + cast[system.int](addr(dummy.field)) - cast[system.int](addr(dummy))))
 
 template gStructMemberP*(structP, structOffset): expr =
   (cast[Gpointer]((cast[system.int](structP) + (clong) (structOffset))))

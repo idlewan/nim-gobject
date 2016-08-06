@@ -58,17 +58,48 @@ proc $2GetType*(): GType {.cdecl.} =
   #echo s
   result = parseStmt(s)
 
+macro gDefineTypeExtendedNoPriv*(tn, t, tp, f: static[string]): stmt =
+  var
+    s = """
+
+proc $2Init(self: $1) {.cdecl.}
+proc $2ClassInit(klass: $1Class) {.cdecl.}
+var $2ParentClass: Gpointer = nil
+proc $2ClassInternInit(klass: Gpointer) {.cdecl.} =
+  $2ParentClass = typeClassPeekParent(klass)
+
+  $2ClassInit(cast[$1Class](klass))
+  
+proc $2GetType*(): GType {.cdecl.} =
+  var gDefineTypeIdVolatile {.global.}: Gsize = 0
+  if onceInitEnter(addr(gDefineTypeIdVolatile)):
+    var gDefineTypeId: GType = registerStaticSimple($3,
+                                      internStaticString("$1"),
+                                      sizeof($1ClassObj).cuint,
+                                      cast[GClassInitFunc]($2ClassInternInit),
+                                      sizeof($1Obj).cuint,
+                                      cast[GInstanceInitFunc]($2Init),
+                                      cast[GTypeFlags]($4))
+    onceInitLeave(addr(gDefineTypeIdVolatile), gDefineTypeId)
+  return gDefineTypeIdVolatile
+
+""" % [tn, t, tp, f]
+  #echo s
+  result = parseStmt(s)
+
 template gDefineTypeExtended*(tn, tp, f: expr; c: string) =
   const tnn = astToStr(tn)
   const t = toLower(tnn[0]) & substr(tnn, 1)
-  gDefineTypeExtended(tnn, t, astToStr(tp), astToStr(f), c)
+  when c == "":
+    gDefineTypeExtendedNoPriv(tnn, t, astToStr(tp), astToStr(f))
+  else:
+    gDefineTypeExtended(tnn, t, astToStr(tp), astToStr(f), c)
 
 template offsetof*(typ, field): expr = (var dummy: typ; cast[system.int](addr(dummy.field)) - cast[system.int](addr(dummy)))
 
-template gStructOffset*(typ, field): expr = (var dummy: typ; clong(cast[system.int](addr(dummy.field)) - cast[system.int](addr(dummy))))
+template gStructOffset*(typ, field): expr = (var dummy: `typ Obj`; clong(cast[system.int](addr(dummy.field)) - cast[system.int](addr(dummy))))
 
-template gPrivateOffset*(TypeName, field): expr =
-  `TypeName privateOffset` + gStructOffset(`TypeName PrivateObj`, field)
+template gPrivateOffset*(typ, field): expr = (var dummy: `typ PrivateObj`; clong(`typ privateOffset` + cast[system.int](addr(dummy.field)) - cast[system.int](addr(dummy))))
 
 template gStructMemberP*(structP, structOffset): expr =
   (cast[Gpointer]((cast[system.int](structP) + (clong) (structOffset))))

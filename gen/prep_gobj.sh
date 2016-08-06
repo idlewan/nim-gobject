@@ -1,5 +1,5 @@
 #!/bin/bash
-# S. Salewski, 02-MAI-2016
+# S. Salewski, 04-AUG-2016
 # generate gobject bindings for Nim
 #
 glib_dir="/home/stefan/Downloads/glib-2.48.0"
@@ -1783,6 +1783,11 @@ sed -i 's/ glib\./ /' final.nim
 sed -i 's/\bproc object\b/proc `object`/g' final.nim
 sed -i 's/\bproc enum\b/proc `enum`/g' final.nim
 
+#proc setChar*(value: GValue;
+for i in Char Schar Uchar Boolean Int Uint Long Ulong Int64 Uint64 Enum Flags Float Double String; do
+  sed -i "s/proc set${i}\*(value: GValue;/proc set${i}\*(value: var GValueObj;/g" final.nim
+done
+
 # generate procs without get_ and set_ prefix
 perl -0777 -p -i -e "s/(\n\s*)(proc set)([A-Z]\w+)(\*\([^}]*\) {[^}]*})/\$&\1proc \`\l\3=\`\4/sg" final.nim
 perl -0777 -p -i -e "s/(\n\s*)(proc get)([A-Z]\w+)(\*\([^}]*\): \w[^}]*})/\$&\1proc \l\3\4/sg" final.nim
@@ -1858,7 +1863,7 @@ template gTypeCift*(ip, ft: expr): expr =
   (checkInstanceIsFundamentallyA(cast[GTypeInstance](ip), ft))
 
 template gTypeCit*(ip, gt: expr): expr =
-  (checkInstanceIsA(cast[GTypeInstance](ip), gt))
+  (checkInstanceIsA(cast[GTypeInstance](ip), cast[GType](gt)))
 
 template gTypeCct*(cp, gt: expr): expr =
   (checkClassIsA(cast[GTypeClass](cp), gt))
@@ -2029,6 +2034,8 @@ sed -i 's/\bg_Type_\w\+/\U&/g' final.nim
 # NOP
 sed -i 's/\(proc \w\+New\)[A-Z]\w\+/\1/g' final.nim
 sed -i 's/proc \(\w\+\)New\*/proc new\u\1*/g' final.nim
+
+sed -i 's/proc init\*(value: GValue;/proc init\*(value: var GValueObj;/g' final.nim
 
 cat ../gobject_extensions.nim >> final.nim
 
