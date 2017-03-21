@@ -2570,7 +2570,7 @@ proc $2GetType*(): GType {.cdecl.} =
 
 template gDefineTypeExtended*(tn, tp, f: expr; c: string) =
   const tnn = astToStr(tn)
-  const t = toLower(tnn[0]) & substr(tnn, 1)
+  const t = toLowerAscii(tnn[0]) & substr(tnn, 1)
   when c == "":
     gDefineTypeExtendedNoPriv(tnn, t, astToStr(tp), astToStr(f))
   else:
