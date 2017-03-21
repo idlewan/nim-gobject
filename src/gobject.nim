@@ -2330,118 +2330,92 @@ template gValueHoldsVariant*(value: expr): expr =
 proc setChar*(value: var GValueObj; vChar: char) {.importc: "g_value_set_char",
     libgobj.}
 
-proc `char=`*(value: var GValueObj; vChar: char) {.importc: "g_value_set_char",
-    libgobj.}
+#proc `char=`*(value: var GValueObj; vChar: char) {.importc: "g_value_set_char", libgobj.}
 proc getChar*(value: GValue): char {.importc: "g_value_get_char", libgobj.}
-proc char*(value: GValue): char {.importc: "g_value_get_char", libgobj.}
+#proc char*(value: GValue): char {.importc: "g_value_get_char", libgobj.}
 proc setSchar*(value: var GValueObj; vChar: int8) {.importc: "g_value_set_schar",
     libgobj.}
-proc `schar=`*(value: var GValueObj; vChar: int8) {.importc: "g_value_set_schar",
-    libgobj.}
+#proc `schar=`*(value: var GValueObj; vChar: int8) {.importc: "g_value_set_schar", libgobj.}
 proc getSchar*(value: GValue): int8 {.importc: "g_value_get_schar",
     libgobj.}
-proc schar*(value: GValue): int8 {.importc: "g_value_get_schar",
-    libgobj.}
+#proc schar*(value: GValue): int8 {.importc: "g_value_get_schar", libgobj.}
 proc setUchar*(value: var GValueObj; vUchar: cuchar) {.
     importc: "g_value_set_uchar", libgobj.}
-proc `uchar=`*(value: var GValueObj; vUchar: cuchar) {.
-    importc: "g_value_set_uchar", libgobj.}
+#proc `uchar=`*(value: var GValueObj; vUchar: cuchar) {.importc: "g_value_set_uchar", libgobj.}
 proc getUchar*(value: GValue): cuchar {.importc: "g_value_get_uchar",
     libgobj.}
-proc uchar*(value: GValue): cuchar {.importc: "g_value_get_uchar",
-    libgobj.}
+#proc uchar*(value: GValue): cuchar {.importc: "g_value_get_uchar", libgobj.}
 proc setBoolean*(value: var GValueObj; vBoolean: Gboolean) {.
     importc: "g_value_set_boolean", libgobj.}
-proc `boolean=`*(value: var GValueObj; vBoolean: Gboolean) {.
-    importc: "g_value_set_boolean", libgobj.}
+#proc `boolean=`*(value: var GValueObj; vBoolean: Gboolean) {.importc: "g_value_set_boolean", libgobj.}
 proc getBoolean*(value: GValue): Gboolean {.importc: "g_value_get_boolean",
     libgobj.}
-proc boolean*(value: GValue): Gboolean {.importc: "g_value_get_boolean",
-    libgobj.}
+#proc boolean*(value: GValue): Gboolean {.importc: "g_value_get_boolean", libgobj.}
 proc setInt*(value: var GValueObj; vInt: cint) {.importc: "g_value_set_int",
     libgobj.}
-proc `int=`*(value: var GValueObj; vInt: cint) {.importc: "g_value_set_int",
-    libgobj.}
+#proc `int=`*(value: var GValueObj; vInt: cint) {.importc: "g_value_set_int", libgobj.}
 proc getInt*(value: GValue): cint {.importc: "g_value_get_int", libgobj.}
-proc int*(value: GValue): cint {.importc: "g_value_get_int", libgobj.}
+#proc int*(value: GValue): cint {.importc: "g_value_get_int", libgobj.}
 proc setUint*(value: var GValueObj; vUint: cuint) {.importc: "g_value_set_uint",
     libgobj.}
-proc `uint=`*(value: var GValueObj; vUint: cuint) {.importc: "g_value_set_uint",
-    libgobj.}
+#proc `uint=`*(value: var GValueObj; vUint: cuint) {.importc: "g_value_set_uint", libgobj.}
 proc getUint*(value: GValue): cuint {.importc: "g_value_get_uint",
     libgobj.}
-proc uint*(value: GValue): cuint {.importc: "g_value_get_uint",
-    libgobj.}
+#proc uint*(value: GValue): cuint {.importc: "g_value_get_uint", libgobj.}
 proc setLong*(value: var GValueObj; vLong: clong) {.importc: "g_value_set_long",
     libgobj.}
-proc `long=`*(value: var GValueObj; vLong: clong) {.importc: "g_value_set_long",
-    libgobj.}
+#proc `long=`*(value: var GValueObj; vLong: clong) {.importc: "g_value_set_long", libgobj.}
 proc getLong*(value: GValue): clong {.importc: "g_value_get_long",
     libgobj.}
-proc long*(value: GValue): clong {.importc: "g_value_get_long",
-    libgobj.}
+#proc long*(value: GValue): clong {.importc: "g_value_get_long", libgobj.}
 proc setUlong*(value: var GValueObj; vUlong: culong) {.
     importc: "g_value_set_ulong", libgobj.}
-proc `ulong=`*(value: var GValueObj; vUlong: culong) {.
-    importc: "g_value_set_ulong", libgobj.}
+#proc `ulong=`*(value: var GValueObj; vUlong: culong) {.importc: "g_value_set_ulong", libgobj.}
 proc getUlong*(value: GValue): culong {.importc: "g_value_get_ulong",
     libgobj.}
-proc ulong*(value: GValue): culong {.importc: "g_value_get_ulong",
-    libgobj.}
+#proc ulong*(value: GValue): culong {.importc: "g_value_get_ulong", libgobj.}
 proc setInt64*(value: var GValueObj; vInt64: int64) {.
     importc: "g_value_set_int64", libgobj.}
-proc `int64=`*(value: var GValueObj; vInt64: int64) {.
-    importc: "g_value_set_int64", libgobj.}
+#proc `int64=`*(value: var GValueObj; vInt64: int64) {.importc: "g_value_set_int64", libgobj.}
 proc getInt64*(value: GValue): int64 {.importc: "g_value_get_int64",
     libgobj.}
-proc int64*(value: GValue): int64 {.importc: "g_value_get_int64",
-    libgobj.}
+#proc int64*(value: GValue): int64 {.importc: "g_value_get_int64", libgobj.}
 proc setUint64*(value: var GValueObj; vUint64: uint64) {.
     importc: "g_value_set_uint64", libgobj.}
-proc `uint64=`*(value: var GValueObj; vUint64: uint64) {.
-    importc: "g_value_set_uint64", libgobj.}
+#proc `uint64=`*(value: var GValueObj; vUint64: uint64) {.importc: "g_value_set_uint64", libgobj.}
 proc getUint64*(value: GValue): uint64 {.importc: "g_value_get_uint64",
     libgobj.}
-proc uint64*(value: GValue): uint64 {.importc: "g_value_get_uint64",
-    libgobj.}
+#proc uint64*(value: GValue): uint64 {.importc: "g_value_get_uint64", libgobj.}
 proc setFloat*(value: var GValueObj; vFloat: cfloat) {.
     importc: "g_value_set_float", libgobj.}
-proc `float=`*(value: var GValueObj; vFloat: cfloat) {.
-    importc: "g_value_set_float", libgobj.}
+#proc `float=`*(value: var GValueObj; vFloat: cfloat) {.importc: "g_value_set_float", libgobj.}
 proc getFloat*(value: GValue): cfloat {.importc: "g_value_get_float",
     libgobj.}
-proc float*(value: GValue): cfloat {.importc: "g_value_get_float",
-    libgobj.}
+#proc float*(value: GValue): cfloat {.importc: "g_value_get_float",libgobj.}
 proc setDouble*(value: var GValueObj; vDouble: cdouble) {.
     importc: "g_value_set_double", libgobj.}
-proc `double=`*(value: var GValueObj; vDouble: cdouble) {.
-    importc: "g_value_set_double", libgobj.}
+#proc `double=`*(value: var GValueObj; vDouble: cdouble) {.importc: "g_value_set_double", libgobj.}
 proc getDouble*(value: GValue): cdouble {.importc: "g_value_get_double",
     libgobj.}
-proc double*(value: GValue): cdouble {.importc: "g_value_get_double",
-    libgobj.}
+#proc double*(value: GValue): cdouble {.importc: "g_value_get_double", libgobj.}
 proc setString*(value: var GValueObj; vString: cstring) {.
     importc: "g_value_set_string", libgobj.}
-proc `string=`*(value: var GValueObj; vString: cstring) {.
-    importc: "g_value_set_string", libgobj.}
+#proc `string=`*(value: var GValueObj; vString: cstring) {.importc: "g_value_set_string", libgobj.}
 proc setStaticString*(value: GValue; vString: cstring) {.
     importc: "g_value_set_static_string", libgobj.}
 proc `staticString=`*(value: GValue; vString: cstring) {.
     importc: "g_value_set_static_string", libgobj.}
 proc getString*(value: GValue): cstring {.importc: "g_value_get_string",
     libgobj.}
-proc string*(value: GValue): cstring {.importc: "g_value_get_string",
-    libgobj.}
+#proc string*(value: GValue): cstring {.importc: "g_value_get_string", libgobj.}
 proc dupString*(value: GValue): cstring {.importc: "g_value_dup_string",
     libgobj.}
 proc setPointer*(value: GValue; vPointer: Gpointer) {.
     importc: "g_value_set_pointer", libgobj.}
-proc `pointer=`*(value: GValue; vPointer: Gpointer) {.
-    importc: "g_value_set_pointer", libgobj.}
+#proc `pointer=`*(value: GValue; vPointer: Gpointer) {.importc: "g_value_set_pointer", libgobj.}
 proc getPointer*(value: GValue): Gpointer {.importc: "g_value_get_pointer",
     libgobj.}
-proc pointer*(value: GValue): Gpointer {.importc: "g_value_get_pointer",
-    libgobj.}
+#proc pointer*(value: GValue): Gpointer {.importc: "g_value_get_pointer",libgobj.}
 proc gtypeGetType*(): GType {.importc: "g_gtype_get_type", libgobj.}
 proc setGtype*(value: GValue; vGtype: GType) {.importc: "g_value_set_gtype",
     libgobj.}
