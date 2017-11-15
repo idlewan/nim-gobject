@@ -2557,7 +2557,7 @@ template gStructOffset*(typ, field): expr = (var dummy: `typ Obj`; clong(cast[sy
 template gPrivateOffset*(typ, field): expr = (var dummy: `typ PrivateObj`; clong(`typ privateOffset` + cast[system.int](addr(dummy.field)) - cast[system.int](addr(dummy))))
 
 template gStructMemberP*(structP, structOffset): expr =
-  (cast[Gpointer]((cast[system.int](structP) + (clong) (structOffset))))
+  (cast[Gpointer]((cast[system.int](structP) + (clong)(structOffset))))
 
 template gDefineTypeExtendedClassInit*(TypeName, typeName): string =
   """
